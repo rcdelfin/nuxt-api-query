@@ -35,6 +35,52 @@ export default defineNuxtConfig({
 });
 ```
 
+3. add api plugin to your project
+
+```ts
+// [your-project]/plugins/api.ts
+export default defineNuxtPlugin(() => {
+  const requestHeaders: HeadersInit = new Headers();
+  requestHeaders.set("Content-Type", "application/json");
+
+  const VALIDATION_ERROR_STATUS = new Set([403, 422, 500]);
+
+  const $api = $fetch.create({
+    baseURL: useRuntimeConfig().public.apiURL,
+    headers: {
+      Accept: "application/json",
+    },
+    onRequest({ request, options, error }) {
+      const config = useRuntimeConfig();
+      const cookieName = config.public?.app?.cookieName || "accessToken";
+      const accessToken = useCookie(cookieName);
+      if (accessToken.value) {
+        options.headers = new Headers(options.headers || {});
+        options.headers.set("Authorization", `Bearer ${accessToken.value}`);
+      }
+    },
+    async onResponseError({ response }) {
+      let { message, error, errors, http_status } = response._data;
+
+      if (VALIDATION_ERROR_STATUS.has(http_status)) {
+        throw createError({
+          message,
+          statusCode: http_status,
+          statusMessage: error,
+          data: errors,
+        });
+      }
+    },
+  });
+
+  return {
+    provide: {
+      api: $api,
+    },
+  };
+});
+```
+
 # Usage
 
 ### Defining Models
@@ -42,7 +88,7 @@ export default defineNuxtConfig({
 Create a model for each of your API resources by extending the `Model` class:
 
 ```ts
-// models/Uers.ts;
+// models/Users.ts;
 import { Model } from "nuxt-api-query";
 export class User extends Model {
   static baseURL = "/api/users";

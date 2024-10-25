@@ -1,6 +1,6 @@
 import { Model } from "./Model";
 
-export class QueryBuilder<M extends Model> {
+export class QueryBuilder<M extends typeof Model> {
   protected wheres: Array<{ field: string; operator: string; value: any }> = [];
   protected includes: string[] = [];
   protected sorts: string[] = [];
@@ -43,38 +43,43 @@ export class QueryBuilder<M extends Model> {
   }
 
   async get(): Promise<InstanceType<M>[]> {
-    const response = await this.model.$http(this.model.baseURL, {
+    const response = await this.model.request(this.model.getBaseURL(), {
       params: this.getQueryParams(),
     });
     return response.map((item: any) => new this.model(item));
   }
 
   async find(id: string | number): Promise<InstanceType<M>> {
-    const response = await this.model.$http(`${this.model.baseURL}/${id}`);
-    return new this.model(response);
+    const response = await this.model.request(
+      `${this.model.getBaseURL()}/${id}`
+    );
+    return new this.model(response) as InstanceType<M>;
   }
 
   async create(data: Partial<M>): Promise<InstanceType<M>> {
-    const response = await this.model.$http(this.model.baseURL, {
+    const response = await this.model.request(this.model.getBaseURL(), {
       method: "POST",
       body: data,
     });
-    return new this.model(response);
+    return new this.model(response) as InstanceType<M>;
   }
 
   async update(
     id: string | number,
     data: Partial<M>
   ): Promise<InstanceType<M>> {
-    const response = await this.model.$http(`${this.model.baseURL}/${id}`, {
-      method: "PUT",
-      body: data,
-    });
-    return new this.model(response);
+    const response = await this.model.request(
+      `${this.model.getBaseURL()}/${id}`,
+      {
+        method: "PUT",
+        body: data,
+      }
+    );
+    return new this.model(response) as InstanceType<M>;
   }
 
   async delete(id: string | number): Promise<void> {
-    await this.model.$http(`${this.model.baseURL}/${id}`, {
+    await this.model.request(`${this.model.getBaseURL()}/${id}`, {
       method: "DELETE",
     });
   }

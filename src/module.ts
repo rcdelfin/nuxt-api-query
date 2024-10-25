@@ -18,7 +18,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Add runtime config
     nuxt.options.runtimeConfig.public.apiQuery = {
-      ...nuxt.options.runtimeConfig.public.apiQuery,
+      ...(nuxt.options.runtimeConfig.public.apiQuery || {}),
       ...options,
     };
   },

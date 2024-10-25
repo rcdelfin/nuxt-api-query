@@ -1,7 +1,7 @@
 import { QueryBuilder } from "./QueryBuilder";
 
 export class Model {
-  protected static baseURL = "";
+  protected static baseURL: string;
   protected static $http: any;
 
   protected $id: string | number | null = null;
@@ -10,6 +10,14 @@ export class Model {
 
   constructor(attributes = {}) {
     this.$fill(attributes);
+  }
+
+  public static getBaseURL(): string {
+    return this.baseURL;
+  }
+
+  public static request(url: string, options?: any) {
+    return this.$http(url, options);
   }
 
   $fill(attributes: Record<string, any>): this {
